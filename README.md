@@ -40,8 +40,8 @@ Try it out, join **#superbowl** on *irc.supernets.org* now, we have beer!
 - Too drunk/Vomit features trigged from `!chug`
 - `!cigar` smoking and `!pizza` eating
 - ASCII art for cigarette packs, lighter, nosmoking, vomit
-- Fastest to respond w/ command timers for somthing.
-- Keep track of how many chugged, smoked, & toked per-nick for `!top` command.
+- Fastest to respond w/ command timers for somthing
+- Keep track of how many chugged, smoked, & toked per-nick for `!top` command
 
 ___
 
