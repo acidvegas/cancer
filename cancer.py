@@ -92,6 +92,22 @@ def ssl_ctx():
 	return ctx
 
 class Generate: # degenerate *
+	def can(chan, target):
+		beer_choice = random.choice(['bud','modelo','ultra'])
+		beer_temp   = random.choice(['a piss warm','an ice cold','an empty'])
+		if beer_choice == 'bud':
+			beer = '{0}{1}{2}'.format(color(' ', white, white), color(' BUD ', white, random.choice((blue,brown))), color('c', grey, white))
+			await self.action(chan, f'throws {color(target, white)} {temp} {beer} =)')
+			if luck(100):
+				await asyncio.sleep(2)
+				await self.action(chan, 'suddenly feels more gay...')
+		elif beer_choice == 'modelo':
+			beer = '{0}{1}{2}'.format(color(' ', orange, orange), color('Modelo', blue, yellow), color('c', grey, orange)) # props to opal
+			await self.action(chan, f'throws {color(target, white)} {temp} {beer} =)')
+		elif beer_choice == 'modelo':
+			beer = '{0}{1}'.format(color(' ULTRA ', blue, white), color('🬃', red, white)) # warm
+			await self.action(chan, f'throws {color(target, white)} {temp} {beer} =)')
+
 	def beer():
 		glass = color(' ', light_grey, light_grey)
 		return glass + color(''.join(random.choice(('       :.')) for _ in range(9)), orange, yellow) + glass
@@ -383,14 +399,7 @@ class Bot():
 									target = nick
 								elif len(args) == 2:
 									target = args[1]
-								if random.choice([1,2]) == 1:
-									beer = '{0}{1}{2}'.format(color(' ', orange, orange), color('Modelo', blue, yellow), color('c', grey, orange)) # props to opal
-								else:
-									beer = '{0}{1}{2}'.format(color(' ', white, white), color(' BUD ', white, random.choice((blue,brown))), color('c', grey, white))
-								await self.action(chan, f'throws {color(target, white)} an ice cold {beer} =)')
-								if luck(100):
-									await asyncio.sleep(2)
-									await self.action(chan, 'suddenly feels more gay...')
+								Generate.can(chan, target)
 							elif msg == '!chainsmoke' and not self.event:
 								self.status = False
 								self.event  = 'chainsmoke'
