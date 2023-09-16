@@ -383,7 +383,10 @@ class Bot():
 									target = nick
 								elif len(args) == 2:
 									target = args[1]
-								beer = '{0}{1}{2}'.format(color(' ', white, white), color(' BUD ', white, random.choice((blue,brown))), color('c', grey, white))
+								if random.choice([1,2]) == 1:
+									beer = '{0}{1}{2}'.format(color(' ', orange, orange), color('Modelo ', blue, yellow), color('c', grey, orange)) # props to opal
+								else:
+									beer = '{0}{1}{2}'.format(color(' ', white, white), color(' BUD ', white, random.choice((blue,brown))), color('c', grey, white))
 								await self.action(chan, f'throws {color(target, white)} an ice cold {beer} =)')
 								if luck(100):
 									await asyncio.sleep(2)
