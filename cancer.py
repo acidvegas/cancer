@@ -384,7 +384,7 @@ class Bot():
 								elif len(args) == 2:
 									target = args[1]
 								if random.choice([1,2]) == 1:
-									beer = '{0}{1}{2}'.format(color(' ', orange, orange), color('Modelo ', blue, yellow), color('c', grey, orange)) # props to opal
+									beer = '{0}{1}{2}'.format(color(' ', orange, orange), color('Modelo', blue, yellow), color('c', grey, orange)) # props to opal
 								else:
 									beer = '{0}{1}{2}'.format(color(' ', white, white), color(' BUD ', white, random.choice((blue,brown))), color('c', grey, white))
 								await self.action(chan, f'throws {color(target, white)} an ice cold {beer} =)')
