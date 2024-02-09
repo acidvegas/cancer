@@ -45,5 +45,4 @@ Try it out, join **#superbowl** on *irc.supernets.org* now, we have beer!
 
 ___
 
-###### Mirrors
-[acid.vegas](https://git.acid.vegas/cancer) • [GitHub](https://github.com/acidvegas/cancer) • [GitLab](https://gitlab.com/acidvegas/cancer) • [SuperNETs](https://git.supernets.org/acidvegas/cancer)
+###### Mirrors for this repository: [acid.vegas](https://git.acid.vegas/cancer) • [SuperNETs](https://git.supernets.org/acidvegas/cancer) • [GitHub](https://github.com/acidvegas/cancer) • [GitLab](https://gitlab.com/acidvegas/cancer) • [Codeberg](https://codeberg.org/acidvegas/cancer)

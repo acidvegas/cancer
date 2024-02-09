@@ -29,16 +29,16 @@ import ssl
 import time
 
 # Connection
-server     = 'irc.server.com'
+server     = 'irc.supernets.org'
 port       = 6697
 use_ipv6   = False
 use_ssl    = True
 vhost      = None
-channel    = '#chats'
+channel    = '#dev'
 key        = None
 
 # Identity
-nickname = 'CANCER'
+nickname = '[DEV]CANCER'
 username = 'smokesome'
 realname = 'git.acid.vegas/cancer'
 
@@ -92,21 +92,21 @@ def ssl_ctx():
 	return ctx
 
 class Generate: # degenerate *
-	def can(chan, target):
+	async def can(chan, target):
 		beer_choice = random.choice(['bud','modelo','ultra'])
 		beer_temp   = random.choice(['a piss warm','an ice cold','an empty'])
 		if beer_choice == 'bud':
 			beer = '{0}{1}{2}'.format(color(' ', white, white), color(' BUD ', white, random.choice((blue,brown))), color('c', grey, white))
-			await self.action(chan, f'throws {color(target, white)} {temp} {beer} =)')
+			await Cancer.action(chan, f'throws {color(target, white)} {beer_temp} {beer} =)')
 			if luck(100):
 				await asyncio.sleep(2)
-				await self.action(chan, 'suddenly feels more gay...')
+				await Cancer.action(chan, 'suddenly feels more gay...')
 		elif beer_choice == 'modelo':
 			beer = '{0}{1}{2}'.format(color(' ', orange, orange), color('Modelo', blue, yellow), color('c', grey, orange)) # props to opal
-			await self.action(chan, f'throws {color(target, white)} {temp} {beer} =)')
+			await Cancer.action(chan, f'throws {color(target, white)} {beer_temp} {beer} =)')
 		elif beer_choice == 'modelo':
 			beer = '{0}{1}'.format(color(' ULTRA ', blue, white), color('🬃', red, white)) # warm
-			await self.action(chan, f'throws {color(target, white)} {temp} {beer} =)')
+			await Cancer.action(chan, f'throws {color(target, white)} {beer_temp} {beer} =)')
 
 	def beer():
 		glass = color(' ', light_grey, light_grey)
@@ -399,7 +399,7 @@ class Bot():
 									target = nick
 								elif len(args) == 2:
 									target = args[1]
-								Generate.can(chan, target)
+								await Generate.can(chan, target)
 							elif msg == '!chainsmoke' and not self.event:
 								self.status = False
 								self.event  = 'chainsmoke'
@@ -456,7 +456,6 @@ class Bot():
 											await self.raw(f'KILL {nick} CANCER KILLED {nick.upper()} - QUIT SMOKING TODAY! +1 800-QUIT-NOW')
 									else:
 										object = Generate.cigarette(self.stats['hits']) if msg == '!smoke' else Generate.joint(self.stats['hits'])
-										cigarette = Generate.cigarette(self.stats['hits'])
 										if self.fat:
 											for i in range(3):
 												await self.sendmsg(chan, object)
@@ -470,4 +469,5 @@ class Bot():
 				break
 
 # Main
-asyncio.run(Bot().connect())
+Cancer = Bot()
+asyncio.run(Cancer.connect())
