@@ -36,13 +36,6 @@ Try it out, join **#superbowl** on *irc.supernets.org* now, we have beer!
 | `!smoke`        | Hit cigarette                                              |
 | `!nosmoking`    | Disable the bot for 30 seconds                             |
 
-## Todo
-- Too drunk/Vomit features trigged from `!chug`
-- `!cigar` smoking and `!pizza` eating
-- ASCII art for cigarette packs, lighter, nosmoking, vomit
-- Fastest to respond w/ command timers for somthing
-- Keep track of how many chugged, smoked, & toked per-nick for `!top` command
-
 ___
 
-###### Mirrors for this repository: [acid.vegas](https://git.acid.vegas/cancer) • [SuperNETs](https://git.supernets.org/acidvegas/cancer) • [GitHub](https://github.com/acidvegas/cancer) • [GitLab](https://gitlab.com/acidvegas/cancer) • [Codeberg](https://codeberg.org/acidvegas/cancer)
+###### Mirrors: [SuperNETs](https://git.supernets.org/acidvegas/cancer) • [GitHub](https://github.com/acidvegas/cancer) • [GitLab](https://gitlab.com/acidvegas/cancer) • [Codeberg](https://codeberg.org/acidvegas/cancer)

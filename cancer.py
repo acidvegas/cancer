@@ -38,7 +38,7 @@ channel    = '#dev'
 key        = None
 
 # Identity
-nickname = '[DEV]CANCER'
+nickname = 'CANCER'
 username = 'smokesome'
 realname = 'git.acid.vegas/cancer'
 
@@ -104,7 +104,7 @@ class Generate: # degenerate *
 		elif beer_choice == 'modelo':
 			beer = '{0}{1}{2}'.format(color(' ', orange, orange), color('Modelo', blue, yellow), color('c', grey, orange)) # props to opal
 			await Cancer.action(chan, f'throws {color(target, white)} {beer_temp} {beer} =)')
-		elif beer_choice == 'modelo':
+		elif beer_choice == 'ultra':
 			beer = '{0}{1}'.format(color(' ULTRA ', blue, white), color('🬃', red, white)) # warm
 			await Cancer.action(chan, f'throws {color(target, white)} {beer_temp} {beer} =)')
 
@@ -259,7 +259,7 @@ class Bot():
 			self.status = True
 
 	async def loop_dragrace(self):
-		self.hits   = 25
+		self.stats['hits'] = 25
 		try:
 			await self.notice(channel, 'Starting a round of {0} in {1} seconds!'.format(color('DragRace', red), color('10', white)))
 			await self.notice(channel, '[{0}] {1} {2} {3}'.format(color('How To Play', light_blue), color('Type', yellow), color('!smoke', light_green), color('to hit a cigarette. The cigarette goes down a little after each hit. You will have 10 seconds to smoke as quickly as possible.', yellow)))
@@ -381,9 +381,11 @@ class Bot():
 							if msg == '@cancer':
 								await self.sendmsg(chan, bold + 'CANCER IRC Bot - Developed by acidvegas in Python - https://git.acid.vegas/cancer')
 							elif msg == '@cancer stats':
-								await self.sendmsg(chan, 'Chugged : {0} beers      {1}'.format(color(self.stats['chugged'], light_blue), color('({0:,} cases)'.format(int(self.stats['chugged']/24)), grey)))
-								await self.sendmsg(chan, 'Smoked  : {0} cigarettes {1}'.format(color(self.stats['smoked'],  light_blue), color('({0:,} packs)'.format(int(self.stats['smoked']/24)),  grey)))
-								await self.sendmsg(chan, 'Toked   : {0} joints     {1}'.format(color(self.stats['toked'],   light_blue), color('({0:,} grams)'.format(int(self.stats['toked']/3)),    grey)))
+								chugged, smoked, toked = ('{0:,}'.format(self.stats[stat]) for stat in ('chugged','smoked','toked'))
+								width = max(len(chugged), len(smoked), len(toked))
+								await self.sendmsg(chan, 'Chugged : {0} beers      {1}'.format(color(chugged.rjust(width), light_blue), color('({0:,} cases)'.format(int(self.stats['chugged']/24)), grey)))
+								await self.sendmsg(chan, 'Smoked  : {0} cigarettes {1}'.format(color(smoked.rjust(width),  light_blue), color('({0:,} packs)'.format(int(self.stats['smoked']/20)),  grey)))
+								await self.sendmsg(chan, 'Toked   : {0} joints     {1}'.format(color(toked.rjust(width),   light_blue), color('({0:,} grams)'.format(int(self.stats['toked']/3)),    grey)))
 							elif msg in ('!100','!extendo','!fatfuck') and luck(100):
 								if msg == '!fatfuck':
 									self.fat = True
@@ -394,10 +396,10 @@ class Bot():
 										await self.sendmsg(chan, '{0}{1}{2}'.format(color(' !!! ', white, red), color('AWWW SHIT, IT\'S TIME FOR THAT NEWPORT 100', red, white), color(' !!! ', white, red)))
 									else:
 										await self.sendmsg(chan, '{0}{1}{2}'.format(color(' !!! ', red, green), color('OHHH FUCK, IT\'S TIME FOR THAT 420 EXTENDO', yellow, green), color(' !!! ', red, green)))
-							elif args[0] == '!beer':
+							elif args[0] == '!beer' and len(args) <= 2:
 								if len(args) == 1:
 									target = nick
-								elif len(args) == 2:
+								else:
 									target = args[1]
 								await Generate.can(chan, target)
 							elif msg == '!chainsmoke' and not self.event:
@@ -452,7 +454,7 @@ class Bot():
 											await self.sendmsg(chan, 'It took {0} seconds for {1} to smoke a cigarette!'.format(color('{:.2f}'.format(time.time()-self.stats['drag']), light_blue), color(chan, white)))
 											self.event = None
 											self.stats['drag'] = 0
-										elif luck(25) and msg == '!smoke':
+										elif luck(100) and msg == '!smoke':
 											await self.raw(f'KILL {nick} CANCER KILLED {nick.upper()} - QUIT SMOKING TODAY! +1 800-QUIT-NOW')
 									else:
 										object = Generate.cigarette(self.stats['hits']) if msg == '!smoke' else Generate.joint(self.stats['hits'])
@@ -465,7 +467,7 @@ class Bot():
 			except (UnicodeDecodeError, UnicodeEncodeError):
 				pass
 			except Exception as ex:
-				error(self.display + 'fatal error occured', ex)
+				error('fatal error occured', ex)
 				break
 
 # Main
