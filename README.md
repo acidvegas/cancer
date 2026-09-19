@@ -22,6 +22,7 @@ Try it out, join **#superbowl** on *irc.supernets.org* now, we have beer!
 | Command         | Description                                                |
 | --------------- | ---------------------------------------------------------- |
 | `@cancer`       | Information about the bot                                  |
+| `@cancer help`  | Show the list of commands                                  |
 | `@cancer stats` | Return bot statistics for the channel                      |
 | `!100`          | 1 in 100 chance to get a 100 *(big `!smoke`)*              |
 | `!beer [nick]`  | Grab a beer or toss one to someone                         |
@@ -30,8 +31,12 @@ Try it out, join **#superbowl** on *irc.supernets.org* now, we have beer!
 | `!dragrace`     | Start a game of Drag Race                                  |
 | `!extendo`      | 1 in 100 chance to get an EXTENDO *(big `!toke`)*          |
 | `!fatfuck`      | 1 in 100 chance to get a  FATFUCK *(fat `!smoke`/`!toke`)* |
+| `!football`     | Pick up the football or see who has it                     |
+| `!intercept`    | Steal the football within 30s of a pass *(1 in 20)*        |
 | `!letschug`     | LET'S FUCKING CHUG!                                        |
 | `!letstoke`     | LET'S FUCKING TOKE!                                        |
+| `!pass <nick>`  | Pass the football *(1 in 20 chance it is incomplete)*      |
+| `!tackle`       | `!tackle <nick>` to make the holder fumble *(1 in 20, 5m)* |
 | `!toke`         | Hit joint                                                  |
 | `!smoke`        | Hit cigarette                                              |
 | `!nosmoking`    | Disable the bot for 30 seconds                             |

@@ -6,6 +6,7 @@ WARNING: This bot highly encourages flooding!
 
 Commands:
 	@cancer       | Information about the bot
+	@cancer help  | Show the list of commands
 	@cancer stats | Return bot statistics for the channel
 	!100          | 1 in 100 chance to get a 100 (big !smoke)
 	!beer [nick]  | Grab a beer or toss one to someone
@@ -14,8 +15,12 @@ Commands:
 	!dragrace     | Start a game of Drag Race
 	!extendo      | 1 in 100 chance to get an EXTENDO (big !toke)
 	!fatfuck      | 1 in 100 chance to get a  FATFUCK (fat !smoke/!toke)
+	!football     | Pick up the football or see who has it
+	!intercept    | 1 in 20 chance to steal the football within 30 seconds of a pass
 	!letschug     | LET'S FUCKING CHUG!
 	!letstoke     | LET'S FUCKING TOKE!
+	!pass <nick>  | Pass the football to someone (1 in 20 chance it is incomplete)
+	!tackle       | !tackle <nick> for a 1 in 20 chance to make the holder fumble (once every 5 minutes)
 	!toke         | Hit joint
 	!smoke        | Hit cigarette
 	!nosmoking    | Disable the bot for 30 seconds
@@ -49,6 +54,7 @@ operator_password = None
 
 # Settings
 user_modes = 'BdDg' # +d requires additional ! and @ to be in your set::channel-command-prefix on UnrealIRCd
+football_blocked = ('fuckyou','scroll','dealer','elimanning','events','guru') # lowercase nicks that can not play football
 
 # Formatting Control Characters / Color Codes
 bold        = '\x02'
@@ -147,9 +153,14 @@ class Bot():
 		self.fat             = False
 		self.event           = None
 		self.nicks           = list()
-		self.stats           = {'hits':25,'sips':8,'chugged':0,'smoked':0,'toked':0,'chain':0,'drag':0}
+		self.stats           = {'hits':25,'sips':8,'chugged':0,'smoked':0,'toked':0,'chain':0,'drag':0,'passes':0,'intercepts':0}
 		self.loops           = {'chainsmoke':None,'dragrace':None,'letschug':None,'letstoke':None,'nosmoking':None,'timers':None}
 		self.status          = True
+		self.members         = dict() # lowercase nick -> nick
+		self.ball            = None   # nick holding the football
+		self.ball_idle       = 0      # last time the holder talked
+		self.ball_pass       = None   # {'passer':nick,'time':time} for the !intercept window
+		self.tackle_time     = 0
 		self.reader          = None
 		self.writer          = None
 
@@ -185,7 +196,7 @@ class Bot():
 			else:
 				if os.path.isfile('stats.json'):
 					with open('stats.json') as stats_file:
-						self.stats = json.loads(stats_file.read())
+						self.stats.update(json.loads(stats_file.read())) # update keeps new stats missing from an older stats.json
 						debug('reloaded stats')
 				await self.listen()
 				for loop in self.loops:
@@ -196,8 +207,92 @@ class Bot():
 				self.event  = None
 				self.nicks  = list()
 				self.status = True
+				self.members   = dict()
+				self.ball      = None
+				self.ball_pass = None
 			finally:
 				await asyncio.sleep(30)
+
+	async def help(self, chan):
+		rows = [
+			('@cancer',       None,     'information about the bot',                       None),
+			('@cancer help',  None,     'show this help',                                  None),
+			('@cancer stats', None,     'bot statistics for the channel',                  None),
+			('!100',          None,     'get a 100 (big !smoke)',                          '(1 in 100)'),
+			('!beer',         '[nick]', 'grab a beer or toss one to someone',              None),
+			('!chainsmoke',   None,     'start a game of chain smoke',                     None),
+			('!chug',         None,     'sip beer',                                        None),
+			('!dragrace',     None,     'start a game of drag race',                       None),
+			('!extendo',      None,     'get an EXTENDO (big !toke)',                      '(1 in 100)'),
+			('!fatfuck',      None,     'get a FATFUCK (fat !smoke/!toke)',                '(1 in 100)'),
+			('!football',     None,     'pick up the football or see who has it',          None),
+			('!intercept',    None,     'steal the football within 30 seconds of a pass', '(1 in 20)'),
+			('!letschug',     None,     'LET\'S FUCKING CHUG!',                           None),
+			('!letstoke',     None,     'LET\'S FUCKING TOKE!',                           None),
+			('!nosmoking',    None,     'disable the bot for 30 seconds',                  None),
+			('!pass',         '<nick>', 'pass the football to someone',                    '(1 in 20 is incomplete)'),
+			('!smoke',        None,     'hit cigarette',                                   None),
+			('!tackle',       '<nick>', 'make the football holder fumble',                 '(1 in 20, once every 5 minutes)'),
+			('!toke',         None,     'hit joint',                                       None)]
+		width = max(len(command + (f' {arg}' if arg else '')) for command, arg, _, _ in rows) + 1
+		await self.sendmsg(chan, color('COMMAND'.ljust(width) + 'DESCRIPTION', yellow))
+		for command, arg, text, note in rows:
+			plain = command + (f' {arg}' if arg else '')
+			line  = command + (' ' + color(arg, cyan if arg.startswith('<') else pink) if arg else '') + ' ' * (width - len(plain)) + color('|', grey) + ' ' + text
+			await self.sendmsg(chan, line + (' ' + color(note, grey) if note else ''))
+
+	async def fumble(self, nick):
+		if self.ball and nick.lower() == self.ball.lower():
+			self.ball      = None
+			self.ball_pass = None
+			await self.action(channel, f'{color(nick, white)} fumbled the 🏈')
+
+	async def football(self, nick, args):
+		if nick.lower() in football_blocked:
+			return
+		if args == ['!football']:
+			if self.ball:
+				await self.action(channel, f'{color(self.ball, white)} has the 🏈')
+			else:
+				self.ball      = nick
+				self.ball_idle = time.time()
+				self.ball_pass = None
+				await self.action(channel, f'{color(nick, white)} picks up the 🏈')
+		elif args == ['!intercept'] and self.ball_pass and time.time() - self.ball_pass['time'] <= 30 and nick not in (self.ball, self.ball_pass['passer']):
+			self.ball_pass = None
+			if luck(20):
+				victim         = self.ball
+				self.stats['intercepts'] += 1
+				self.ball      = nick
+				self.ball_idle = time.time()
+				await self.action(channel, f'{color(nick, white)} INTERCEPTS the 🏈 from {color(victim, white)}!')
+			else:
+				await self.action(channel, f'{color(nick, white)} tries to intercept the 🏈 from {color(self.ball, white)} and misses!')
+		elif len(args) != 2:
+			return
+		elif args[0] == '!pass' and nick == self.ball:
+			target = self.members.get(args[1].lower())
+			if target and target.lower() not in football_blocked + (nick.lower(), nickname.lower()):
+				if luck(20):
+					self.ball      = None
+					self.ball_pass = None
+					await self.action(channel, f'{color(nick, white)}\'s pass to {color(target, white)} is incomplete! The 🏈 hits the ground.')
+				else:
+					self.ball      = target
+					self.ball_idle = time.time()
+					self.ball_pass = {'passer':nick,'time':time.time()}
+					self.stats['passes'] += 1
+					await self.action(channel, f'{color(nick, white)} passes the 🫳🏈 to {color(target, white)}.')
+		elif args[0] == '!tackle' and self.ball and args[1].lower() == self.ball.lower() and nick != self.ball and time.time() - self.tackle_time >= 300:
+			self.tackle_time = time.time()
+			if luck(20):
+				victim = self.ball
+				await self.action(channel, f'{color(nick, white)} tackles {color(victim, white)}!')
+				await self.fumble(victim)
+				if luck(100):
+					await self.raw(f'KICK {channel} {victim} :{victim} GOT CTE AND IS MADE FUCKING RETARDED')
+			else:
+				await self.action(channel, f'{color(nick, white)} tries to tackle {color(self.ball, white)} and misses!')
 
 	async def loop_nosmoking(self):
 		await asyncio.sleep(30)
@@ -206,6 +301,8 @@ class Bot():
 	async def loop_timers(self):
 		while True:
 			try:
+				if self.ball and time.time() - self.ball_idle >= 86400:
+					await self.fumble(self.ball)
 				if time.strftime('%I:%M') == '04:20':
 					await self.sendmsg(channel, color('S M O K E W E E D E R R D A Y', light_green))
 					await self.sendmsg(channel, color('ITZ DAT MUTHA FUCKN 420 BITCH', yellow))
@@ -363,29 +460,63 @@ class Bot():
 				elif args[1] == 'KICK' and len(args) >= 4:
 					chan   = args[2]
 					kicked = args[3]
+					if chan == channel:
+						self.members.pop(kicked.lower(), None)
+						await self.fumble(kicked)
 					if kicked == nickname and chan == channel:
+						self.members   = dict()
+						self.ball      = None
+						self.ball_pass = None
 						await asyncio.sleep(3)
 						await self.raw(f'JOIN {channel} {key}') if key else await self.raw('JOIN ' + channel)
 				elif args[1] == 'PART' and len(args) >= 3:
 					chan = args[2]
 					if chan == channel:
 						nick = args[0].split('!')[0][1:]
+						self.members.pop(nick.lower(), None)
+						await self.fumble(nick)
 						await self.action(nick, f'blows smoke in {nick}\'s face...')
+				elif args[1] == 'JOIN' and len(args) >= 3:
+					if args[2].lstrip(':') == channel:
+						nick = args[0].split('!')[0][1:]
+						self.members[nick.lower()] = nick
+				elif args[1] == 'QUIT':
+					nick = args[0].split('!')[0][1:]
+					self.members.pop(nick.lower(), None)
+					await self.fumble(nick)
+				elif args[1] == 'NICK' and len(args) >= 3:
+					nick = args[0].split('!')[0][1:]
+					if self.members.pop(nick.lower(), None):
+						new_nick = args[2].lstrip(':')
+						self.members[new_nick.lower()] = new_nick
+					await self.fumble(nick)
+				elif args[1] == '353' and len(args) >= 6:
+					if args[4] == channel:
+						for name in ' '.join(args[5:])[1:].split():
+							name = name.lstrip('~&@%+')
+							self.members[name.lower()] = name
 				elif args[1] == 'PRIVMSG' and len(args) >= 4:
 					nick = args[0].split('!')[0][1:]
 					chan = args[2]
 					msg  = ' '.join(args[3:])[1:]
 					if chan ==  channel:
+						if nick == self.ball:
+							self.ball_idle = time.time()
+						await self.football(nick, msg.split())
 						if self.status:
 							args = msg.split()
 							if msg == '@cancer':
 								await self.sendmsg(chan, bold + 'CANCER IRC Bot - Developed by acidvegas in Python - https://git.acid.vegas/cancer')
+							elif msg == '@cancer help':
+								await self.help(chan)
 							elif msg == '@cancer stats':
-								chugged, smoked, toked = ('{0:,}'.format(self.stats[stat]) for stat in ('chugged','smoked','toked'))
-								width = max(len(chugged), len(smoked), len(toked))
-								await self.sendmsg(chan, 'Chugged : {0} beers      {1}'.format(color(chugged.rjust(width), light_blue), color('({0:,} cases)'.format(int(self.stats['chugged']/24)), grey)))
-								await self.sendmsg(chan, 'Smoked  : {0} cigarettes {1}'.format(color(smoked.rjust(width),  light_blue), color('({0:,} packs)'.format(int(self.stats['smoked']/20)),  grey)))
-								await self.sendmsg(chan, 'Toked   : {0} joints     {1}'.format(color(toked.rjust(width),   light_blue), color('({0:,} grams)'.format(int(self.stats['toked']/3)),    grey)))
+								chugged, smoked, toked, passes, intercepts = ('{0:,}'.format(self.stats[stat]) for stat in ('chugged','smoked','toked','passes','intercepts'))
+								width = max(len(chugged), len(smoked), len(toked), len(passes), len(intercepts))
+								await self.sendmsg(chan, 'Chugged     : {0} beers      {1}'.format(color(chugged.rjust(width), light_blue), color('({0:,} cases)'.format(int(self.stats['chugged']/24)), grey)))
+								await self.sendmsg(chan, 'Smoked      : {0} cigarettes {1}'.format(color(smoked.rjust(width),  light_blue), color('({0:,} packs)'.format(int(self.stats['smoked']/20)),  grey)))
+								await self.sendmsg(chan, 'Toked       : {0} joints     {1}'.format(color(toked.rjust(width),   light_blue), color('({0:,} grams)'.format(int(self.stats['toked']/3)),    grey)))
+								await self.sendmsg(chan, 'Passed      : {0} footballs'.format(color(passes.rjust(width), light_blue)))
+								await self.sendmsg(chan, 'Intercepted : {0} footballs'.format(color(intercepts.rjust(width), light_blue)))
 							elif msg in ('!100','!extendo','!fatfuck') and luck(100):
 								if msg == '!fatfuck':
 									self.fat = True
